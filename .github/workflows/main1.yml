@@ -1,0 +1,23 @@
+name: Azure CLI Login Tests
+on:
+  push:
+      branches:
+        - master
+jobs:
+
+  build:
+    runs-on: self-hosted
+    steps:  
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+        enable-AzPSSession: true 
+
+        
+    - name: Run Azure PowerShell script
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          Get-AzResourceGroup -ResourceGroupName "myResourceGroup2"
+        azPSVersion: "latest"
