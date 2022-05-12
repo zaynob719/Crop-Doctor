@@ -13,11 +13,20 @@ jobs:
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}}
         enable-AzPSSession: true 
-
         
-    - name: Run Azure PowerShell script
-      uses: azure/powershell@v1
+    - name: Start VMs every weekday at 7am
+      if: github.event.schedule == '0 7 * * 1-5'
+      uses: Azure/CLI@v1
       with:
         inlineScript: |
-          Get-AzResourceGroup -ResourceGroupName "myResourceGroup2"
-        azPSVersion: "latest"
+          #!/bin/bash
+          az vm start --ids $(az vm list -g ${{ env.RG_NAME }} --query "[?tags.keepAlive != 'true'].id" -o tsv)
+                  
+      # Deallocate VMs every weekday at 6pm
+    - name: Deallocate VMs every weekday at 6pm
+      if: github.event.schedule == '0 18 * * 1-5'
+      uses: Azure/CLI@v1
+      with:
+        inlineScript: |
+          #!/bin/bash
+          az vm deallocate --ids $(az vm list -g ${{ env.RG_NAME }} --query "[?tags.keepAlive != 'true'].id" -o tsv)
